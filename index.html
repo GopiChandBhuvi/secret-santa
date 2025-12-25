@@ -1,44 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>🎄 Secret Santa</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="style.css">
+
+<style>
+/* ---------- RESET ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---------- BACKGROUND ---------- */
+body {
+  height: 100vh;
+  background:
+    radial-gradient(circle at top, #0a2a43, #020b1a 70%);
+  overflow: hidden;
+  color: #fff;
+}
+
+/* ---------- SNOW ---------- */
+.snow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.snow span {
+  position: absolute;
+  top: -10px;
+  font-size: 18px;
+  opacity: 0.8;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh);
+  }
+}
+
+/* ---------- SANTA ---------- */
+.santa {
+  position: fixed;
+  top: 15%;
+  left: -300px;
+  font-size: 64px;
+  animation: santaFly 18s linear infinite;
+  filter: drop-shadow(0 0 12px rgba(255,255,255,.5));
+}
+
+@keyframes santaFly {
+  to { left: 110%; }
+}
+
+/* ---------- LIGHTS ---------- */
+.lights {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 12px;
+  animation: blink 1.5s infinite alternate;
+}
+
+@keyframes blink {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+/* ---------- CENTER CARD ---------- */
+.wrapper {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 340px;
+  height: 480px;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 30px 60px rgba(0,0,0,.6),
+    inset 0 0 0 1px rgba(255,255,255,.25);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---------- CARD CONTENT ---------- */
+.content {
+  position: absolute;
+  inset: 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.content img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid #ff4d4d;
+  margin-bottom: 12px;
+}
+
+.content h2 {
+  margin-bottom: 6px;
+}
+
+.budget {
+  color: #2ecc71;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.msg {
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ---------- SCRATCH LAYER ---------- */
+canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- TITLE ---------- */
+.title {
+  position: fixed;
+  top: 90px;
+  width: 100%;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+}
+</style>
 </head>
 
 <body>
 
-<div class="snow"></div>
-
+<div class="lights">🔴 🟡 🟢 🔴 🟡 🟢 🔴 🟡 🟢</div>
 <div class="santa">🎅🛷</div>
 
-<section class="page active" id="page1">
-  <h1>🎁 Secret Santa</h1>
-  <p>A magical surprise awaits you ✨</p>
-  <button onclick="go(2)">Open Gift</button>
-</section>
+<div class="title">Scratch to Reveal 🎄</div>
 
-<section class="page" id="page2">
-  <h2>Scratch to Reveal 🎄</h2>
+<div class="snow" id="snow"></div>
 
+<div class="wrapper">
   <div class="card">
-    <canvas id="scratch"></canvas>
-
-    <div class="result">
+    <div class="content" id="result">
       <img id="photo">
-      <h3 id="name"></h3>
-      <p id="budget"></p>
-      <p id="message"></p>
+      <h2 id="name"></h2>
+      <div class="budget" id="budget"></div>
+      <div class="msg" id="msg"></div>
     </div>
+    <canvas id="scratch"></canvas>
   </div>
-</section>
+</div>
 
-<section class="page" id="page3">
-  <h2>🎉 Mission Assigned!</h2>
-  <p>Make it special and spread joy ❤️</p>
-</section>
+<script>
+/* ---------- SNOW GENERATION ---------- */
+const snow = document.getElementById("snow");
+for (let i = 0; i < 40; i++) {
+  const s = document.createElement("span");
+  s.innerText = "❄";
+  s.style.left = Math.random() * 100 + "vw";
+  s.style.animationDuration = 5 + Math.random() * 10 + "s";
+  s.style.fontSize = 12 + Math.random() * 14 + "px";
+  snow.appendChild(s);
+}
 
-<script src="script.js"></script>
+/* ---------- DATA ---------- */
+const people = [
+  { name: "Rahul Sharma", img: "https://randomuser.me/api/portraits/men/32.jpg" },
+  { name: "Sneha Patel", img: "https://randomuser.me/api/portraits/women/45.jpg" },
+  { name: "Aman Verma", img: "https://randomuser.me/api/portraits/men/75.jpg" }
+];
+
+const p = people[Math.floor(Math.random() * people.length)];
+document.getElementById("photo").src = p.img;
+document.getElementById("name").innerText = p.name;
+document.getElementById("budget").innerText = "Budget: ₹" + (800 + Math.floor(Math.random() * 900));
+document.getElementById("msg").innerText = "Make it magical 🎁✨";
+
+/* ---------- SCRATCH ---------- */
+const canvas = document.getElementById("scratch");
+const ctx = canvas.getContext("2d");
+canvas.width = 340;
+canvas.height = 480;
+
+ctx.fillStyle = "#bfbfbf";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.font = "bold 22px Segoe UI";
+ctx.fillStyle = "#444";
+ctx.textAlign = "center";
+ctx.fillText("SCRATCH HERE", canvas.width/2, canvas.height/2);
+
+ctx.globalCompositeOperation = "destination-out";
+
+let down = false;
+let cleared = 0;
+
+function scratch(x,y) {
+  ctx.beginPath();
+  ctx.arc(x,y,26,0,Math.PI*2);
+  ctx.fill();
+  cleared++;
+  if (cleared > 160) {
+    canvas.style.transition = "opacity .8s ease";
+    canvas.style.opacity = 0;
+  }
+}
+
+canvas.onmousedown = () => down = true;
+canvas.onmouseup = () => down = false;
+canvas.onmousemove = e => down && scratch(e.offsetX, e.offsetY);
+
+canvas.ontouchmove = e => {
+  e.preventDefault();
+  const r = canvas.getBoundingClientRect();
+  scratch(
+    e.touches[0].clientX - r.left,
+    e.touches[0].clientY - r.top
+  );
+};
+</script>
+
 </body>
 </html>
