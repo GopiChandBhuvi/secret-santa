@@ -5,190 +5,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎅 Secret Santa</title>
 
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", system-ui, sans-serif;
-}
-
-/* ---------- ANIMATED BACKGROUND ---------- */
-body {
-  height: 100vh;
-  overflow: hidden;
-  background: #000;
-}
-
-.bg {
-  position: fixed;
-  inset: 0;
-  background: url("santa-bg.jpg") repeat-x;
-  background-size: cover;
-  animation: moveBg 40s linear infinite;
-  filter: brightness(0.65);
-}
-
-@keyframes moveBg {
-  from { background-position: 0 0; }
-  to   { background-position: -3000px 0; }
-}
-
-/* ---------- OVERLAY ---------- */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle, rgba(0,0,0,.2), rgba(0,0,0,.7));
-}
-
-/* ---------- CENTER ---------- */
-.wrapper {
-  position: relative;
-  z-index: 2;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ---------- CARD ---------- */
-.card {
-  width: 360px;
-  height: 500px;
-  border-radius: 26px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 30px 80px rgba(0,0,0,.6);
-  position: relative;
-  overflow: hidden;
-  color: #fff;
-}
-
-/* ---------- CONTENT ---------- */
-.content {
-  position: absolute;
-  inset: 0;
-  padding: 26px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.content img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 4px solid #ff4d4d;
-  margin-bottom: 12px;
-}
-
-h2 {
-  margin-bottom: 6px;
-}
-
-.budget {
-  color: #2ecc71;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.msg {
-  margin-top: 8px;
-  font-style: italic;
-}
-
-/* ---------- SCRATCH ---------- */
-canvas {
-  position: absolute;
-  inset: 0;
-  border-radius: 26px;
-}
-
-/* ---------- TITLE ---------- */
-.title {
-  position: fixed;
-  top: 60px;
-  width: 100%;
-  text-align: center;
-  font-size: 34px;
-  font-weight: 700;
-  color: #fff;
-  z-index: 2;
-  text-shadow: 0 0 20px rgba(255,255,255,.5);
-}
-</style>
-</head>
-
-<body>
-
-<div class="bg"></div>
-<div class="overlay"></div>
-
-<div class="title">Scratch to Reveal 🎄</div>
-
-<div class="wrapper">
-  <div class="card">
-    <div class="content" id="result">
-      <img id="photo">
-      <h2 id="name"></h2>
-      <div class="budget" id="budget"></div>
-      <div class="msg" id="msg"></div>
-    </div>
-    <canvas id="scratch"></canvas>
-  </div>
-</div>
-
 <script>
-/* ---------- DATA ---------- */
 const people = [
-  { name: "Rahul Sharma", img: "https://randomuser.me/api/portraits/men/32.jpg" },
   { name: "Sneha Patel", img: "https://randomuser.me/api/portraits/women/45.jpg" },
+  { name: "Rahul Sharma", img: "https://randomuser.me/api/portraits/men/32.jpg" },
   { name: "Aman Verma", img: "https://randomuser.me/api/portraits/men/75.jpg" }
 ];
 
 const p = people[Math.floor(Math.random() * people.length)];
-document.getElementById("photo").src = p.img;
-document.getElementById("name").innerText = p.name;
-document.getElementById("budget").innerText = "Budget: ₹" + (1000 + Math.floor(Math.random() * 800));
-document.getElementById("msg").innerText = "Make it magical 🎁✨";
+photo.src = p.img;
+name.innerText = p.name;
+budget.innerText = "Budget: ₹" + (1000 + Math.floor(Math.random()*700));
+msg.innerText = "Make it magical 🎄✨";
 
-/* ---------- SCRATCH LOGIC ---------- */
 const canvas = document.getElementById("scratch");
 const ctx = canvas.getContext("2d");
+
 canvas.width = 360;
 canvas.height = 500;
 
-ctx.fillStyle = "#cfcfcf";
+/* 🎨 SILVER SCRATCH LAYER */
+ctx.fillStyle = "#d0d0d0";
 ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.font = "bold 22px Segoe UI";
 ctx.fillStyle = "#555";
+ctx.font = "bold 22px Segoe UI";
 ctx.textAlign = "center";
 ctx.fillText("SCRATCH HERE", canvas.width/2, canvas.height/2);
 
 ctx.globalCompositeOperation = "destination-out";
 
 let isDown = false;
-let scratched = 0;
+let revealed = false;
 
 function scratch(x,y) {
   ctx.beginPath();
-  ctx.arc(x,y,28,0,Math.PI*2);
+  ctx.arc(x,y,30,0,Math.PI*2);
   ctx.fill();
-  scratched++;
-  if (scratched > 180) {
+  checkReveal();
+}
+
+function checkReveal() {
+  if (revealed) return;
+
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  let cleared = 0;
+
+  for (let i = 3; i < img.data.length; i += 4) {
+    if (img.data[i] === 0) cleared++;
+  }
+
+  const percent = cleared / (canvas.width * canvas.height) * 100;
+
+  if (percent > 35) {
+    revealed = true;
     canvas.style.transition = "opacity 1s ease";
     canvas.style.opacity = 0;
+    setTimeout(() => canvas.remove(), 1000);
   }
 }
 
+/* 🖱️ Mouse */
 canvas.addEventListener("mousedown", () => isDown = true);
 canvas.addEventListener("mouseup", () => isDown = false);
 canvas.addEventListener("mousemove", e => {
   if (isDown) scratch(e.offsetX, e.offsetY);
 });
 
+/* 📱 Touch */
+canvas.addEventListener("touchstart", () => isDown = true);
+canvas.addEventListener("touchend", () => isDown = false);
 canvas.addEventListener("touchmove", e => {
   e.preventDefault();
   const r = canvas.getBoundingClientRect();
@@ -196,7 +81,7 @@ canvas.addEventListener("touchmove", e => {
     e.touches[0].clientX - r.left,
     e.touches[0].clientY - r.top
   );
-}, { passive: false });
+},{ passive:false });
 </script>
 
 </body>
