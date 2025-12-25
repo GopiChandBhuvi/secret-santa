@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎅 Secret Santa Scratch Card</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+
+    .card {
+      background: #fff;
+      color: #333;
+      width: 350px;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    h1 {
+      margin: 10px 0;
+      color: #c0392b;
+    }
+
+    .result {
+      display: none;
+    }
+
+    .result img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #c0392b;
+      margin: 10px 0;
+    }
+
+    .budget {
+      font-size: 22px;
+      font-weight: bold;
+      color: #27ae60;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-radius: 16px;
+    }
+
+    .hint {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>🎁 Secret Santa</h1>
+
+    <div class="result" id="result">
+      <img id="photo" />
+      <h2 id="name"></h2>
+      <p class="budget">Budget: ₹<span id="budget"></span></p>
+      <p class="message" id="message"></p>
+    </div>
+
+    <p class="hint">Scratch the card to reveal your Secret Santa task 👆</p>
+    <canvas id="scratch"></canvas>
+  </div>
+
+  <script>
+    const people = [
+      {
+        name: "Rahul Sharma",
+        photo: "https://randomuser.me/api/portraits/men/32.jpg",
+        message: "Something cool, fun and thoughtful 😄"
+      },
+      {
+        name: "Amit Verma",
+        photo: "https://randomuser.me/api/portraits/men/45.jpg",
+        message: "Make him smile with a surprise 🎉"
+      },
+      {
+        name: "Rohan Mehta",
+        photo: "https://randomuser.me/api/portraits/men/67.jpg",
+        message: "Simple gift but full of heart ❤️"
+      },
+      {
+        name: "Karan Singh",
+        photo: "https://randomuser.me/api/portraits/men/12.jpg",
+        message: "Something useful but unexpected 😉"
+      }
+    ];
+
+    const budgets = [500, 750, 1000, 1200, 1500];
+
+    const selectedPerson = people[Math.floor(Math.random() * people.length)];
+    const selectedBudget = budgets[Math.floor(Math.random() * budgets.length)];
+
+    document.getElementById("photo").src = selectedPerson.photo;
+    document.getElementById("name").innerText = selectedPerson.name;
+    document.getElementById("budget").innerText = selectedBudget;
+    document.getElementById("message").innerText = selectedPerson.message;
+
+    const canvas = document.getElementById("scratch");
+    const ctx = canvas.getContext("2d");
+    const card = document.querySelector('.card');
+
+    canvas.width = card.offsetWidth;
+    canvas.height = card.offsetHeight;
+
+    ctx.fillStyle = "#bdc3c7";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#2c3e50";
+    ctx.font = "bold 22px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText("SCRATCH HERE", canvas.width / 2, canvas.height / 2);
+
+    let scratching = false;
+
+    function scratch(x, y) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    canvas.addEventListener('mousedown', () => scratching = true);
+    canvas.addEventListener('mouseup', () => scratching = false);
+    canvas.addEventListener('mouseleave', () => scratching = false);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!scratching) return;
+      const rect = canvas.getBoundingClientRect();
+      scratch(e.clientX - rect.left, e.clientY - rect.top);
+      document.getElementById("result").style.display = "block";
+    });
+
+    canvas.addEventListener('touchstart', () => scratching = true);
+    canvas.addEventListener('touchend', () => scratching = false);
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!scratching) return;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+      document.getElementById("result").style.display = "block";
+    }, { passive: false });
+  </script>
+
+</body>
+</html>
