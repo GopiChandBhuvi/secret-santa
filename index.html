@@ -2,86 +2,133 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎅 Secret Santa</title>
+<title>Secret Santa 🎅</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url("santa-bg.jpg") no-repeat center/cover;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.card {
+  width: 360px;
+  height: 500px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.content {
+  text-align: center;
+  padding: 30px;
+  color: white;
+}
+
+.content img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid gold;
+  margin-bottom: 15px;
+}
+
+h2 { margin: 10px 0; }
+p { margin: 6px 0; }
+
+canvas {
+  position: absolute;
+  inset: 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="content">
+    <img id="photo">
+    <h2 id="name"></h2>
+    <p id="budget"></p>
+    <p id="msg"></p>
+  </div>
+  <canvas id="scratch"></canvas>
+</div>
 
 <script>
-const people = [
-  { name: "Sneha Patel", img: "https://randomuser.me/api/portraits/women/45.jpg" },
-  { name: "Rahul Sharma", img: "https://randomuser.me/api/portraits/men/32.jpg" },
-  { name: "Aman Verma", img: "https://randomuser.me/api/portraits/men/75.jpg" }
-];
+document.addEventListener("DOMContentLoaded", () => {
 
-const p = people[Math.floor(Math.random() * people.length)];
-photo.src = p.img;
-name.innerText = p.name;
-budget.innerText = "Budget: ₹" + (1000 + Math.floor(Math.random()*700));
-msg.innerText = "Make it magical 🎄✨";
+  const people = [
+    { name: "Sneha Patel", img: "https://randomuser.me/api/portraits/women/45.jpg" },
+    { name: "Rahul Sharma", img: "https://randomuser.me/api/portraits/men/32.jpg" },
+    { name: "Aman Verma", img: "https://randomuser.me/api/portraits/men/75.jpg" }
+  ];
 
-const canvas = document.getElementById("scratch");
-const ctx = canvas.getContext("2d");
+  const p = people[Math.floor(Math.random() * people.length)];
+  photo.src = p.img;
+  name.textContent = p.name;
+  budget.textContent = "Budget: ₹" + (1000 + Math.floor(Math.random()*700));
+  msg.textContent = "Make it magical 🎄✨";
 
-canvas.width = 360;
-canvas.height = 500;
+  const canvas = document.getElementById("scratch");
+  const ctx = canvas.getContext("2d");
 
-/* 🎨 SILVER SCRATCH LAYER */
-ctx.fillStyle = "#d0d0d0";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle = "#555";
-ctx.font = "bold 22px Segoe UI";
-ctx.textAlign = "center";
-ctx.fillText("SCRATCH HERE", canvas.width/2, canvas.height/2);
+  canvas.width = 360;
+  canvas.height = 500;
 
-ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = "#cfcfcf";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#555";
+  ctx.font = "bold 22px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("SCRATCH HERE", canvas.width/2, canvas.height/2);
 
-let isDown = false;
-let revealed = false;
+  ctx.globalCompositeOperation = "destination-out";
 
-function scratch(x,y) {
-  ctx.beginPath();
-  ctx.arc(x,y,30,0,Math.PI*2);
-  ctx.fill();
-  checkReveal();
-}
+  let isDown = false;
+  let revealed = false;
 
-function checkReveal() {
-  if (revealed) return;
-
-  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
-  let cleared = 0;
-
-  for (let i = 3; i < img.data.length; i += 4) {
-    if (img.data[i] === 0) cleared++;
+  function scratch(x,y) {
+    ctx.beginPath();
+    ctx.arc(x,y,30,0,Math.PI*2);
+    ctx.fill();
+    checkReveal();
   }
 
-  const percent = cleared / (canvas.width * canvas.height) * 100;
+  function checkReveal() {
+    if (revealed) return;
+    const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+    let cleared = 0;
 
-  if (percent > 35) {
-    revealed = true;
-    canvas.style.transition = "opacity 1s ease";
-    canvas.style.opacity = 0;
-    setTimeout(() => canvas.remove(), 1000);
+    for (let i = 3; i < img.data.length; i += 4)
+      if (img.data[i] === 0) cleared++;
+
+    if ((cleared / (canvas.width * canvas.height)) * 100 > 35) {
+      revealed = true;
+      canvas.style.transition = "opacity 1s";
+      canvas.style.opacity = 0;
+      setTimeout(() => canvas.remove(), 1000);
+    }
   }
-}
 
-/* 🖱️ Mouse */
-canvas.addEventListener("mousedown", () => isDown = true);
-canvas.addEventListener("mouseup", () => isDown = false);
-canvas.addEventListener("mousemove", e => {
-  if (isDown) scratch(e.offsetX, e.offsetY);
+  canvas.onmousedown = () => isDown = true;
+  canvas.onmouseup = () => isDown = false;
+  canvas.onmousemove = e => isDown && scratch(e.offsetX,e.offsetY);
+
+  canvas.addEventListener("touchmove", e => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    scratch(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+  },{passive:false});
+
 });
-
-/* 📱 Touch */
-canvas.addEventListener("touchstart", () => isDown = true);
-canvas.addEventListener("touchend", () => isDown = false);
-canvas.addEventListener("touchmove", e => {
-  e.preventDefault();
-  const r = canvas.getBoundingClientRect();
-  scratch(
-    e.touches[0].clientX - r.left,
-    e.touches[0].clientY - r.top
-  );
-},{ passive:false });
 </script>
 
 </body>
