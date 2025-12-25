@@ -1,134 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Secret Santa 🎅</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🎅 Secret Santa</title>
 
 <style>
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: url("santa-bg.jpg") no-repeat center/cover;
-  font-family: "Segoe UI", sans-serif;
-}
+  * { box-sizing: border-box; }
 
-.card {
-  width: 360px;
-  height: 500px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-  position: relative;
-  overflow: hidden;
-}
+  body {
+    margin: 0;
+    height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
 
-.content {
-  text-align: center;
-  padding: 30px;
-  color: white;
-}
+  .page {
+    display: none;
+    width: 360px;
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+    animation: fadeIn 0.6s ease;
+    position: relative;
+  }
 
-.content img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 4px solid gold;
-  margin-bottom: 15px;
-}
+  .page.active { display: block; }
 
-h2 { margin: 10px 0; }
-p { margin: 6px 0; }
+  h1 {
+    color: #c0392b;
+    margin-bottom: 10px;
+  }
 
-canvas {
-  position: absolute;
-  inset: 0;
-}
+  button {
+    margin-top: 20px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  button:hover { transform: scale(1.05); }
+
+  /* Scratch Card */
+  .scratch-container {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 15px;
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .reveal {
+    padding: 20px;
+  }
+
+  .reveal img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #c0392b;
+    object-fit: cover;
+  }
+
+  .budget {
+    color: #27ae60;
+    font-size: 22px;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <div class="content">
-    <img id="photo">
-    <h2 id="name"></h2>
-    <p id="budget"></p>
-    <p id="msg"></p>
+<!-- INTRO PAGE -->
+<div class="page active" id="intro">
+  <h1>🎁 Secret Santa</h1>
+  <p>A surprise is waiting for you…</p>
+  <button onclick="goToScratch()">Reveal My Task</button>
+</div>
+
+<!-- SCRATCH PAGE -->
+<div class="page" id="scratchPage">
+  <h1>🎅 Scratch Card</h1>
+  <p>Scratch to reveal your Secret Santa 🎟️</p>
+
+  <div class="scratch-container" id="scratchBox">
+    <div class="reveal" id="reveal">
+      <img id="photo">
+      <h2 id="name"></h2>
+      <div class="budget">₹<span id="budget"></span></div>
+      <p id="message"></p>
+    </div>
+    <canvas id="canvas"></canvas>
   </div>
-  <canvas id="scratch"></canvas>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
+  /* DATA */
   const people = [
-    { name: "Sneha Patel", img: "https://randomuser.me/api/portraits/women/45.jpg" },
-    { name: "Rahul Sharma", img: "https://randomuser.me/api/portraits/men/32.jpg" },
-    { name: "Aman Verma", img: "https://randomuser.me/api/portraits/men/75.jpg" }
+    { name: "Rahul Sharma", photo: "https://randomuser.me/api/portraits/men/32.jpg", msg: "Something cool & thoughtful 😄" },
+    { name: "Amit Verma", photo: "https://randomuser.me/api/portraits/men/45.jpg", msg: "Make him smile 🎉" },
+    { name: "Rohan Mehta", photo: "https://randomuser.me/api/portraits/men/67.jpg", msg: "Simple but meaningful ❤️" },
+    { name: "Karan Singh", photo: "https://randomuser.me/api/portraits/men/12.jpg", msg: "Useful & unexpected 😉" }
   ];
+  const budgets = [500, 750, 1000, 1200, 1500];
 
-  const p = people[Math.floor(Math.random() * people.length)];
-  photo.src = p.img;
-  name.textContent = p.name;
-  budget.textContent = "Budget: ₹" + (1000 + Math.floor(Math.random()*700));
-  msg.textContent = "Make it magical 🎄✨";
+  const p = people[Math.floor(Math.random()*people.length)];
+  document.getElementById("photo").src = p.photo;
+  document.getElementById("name").innerText = p.name;
+  document.getElementById("message").innerText = p.msg;
+  document.getElementById("budget").innerText = budgets[Math.floor(Math.random()*budgets.length)];
 
-  const canvas = document.getElementById("scratch");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = 360;
-  canvas.height = 500;
-
-  ctx.fillStyle = "#cfcfcf";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = "#555";
-  ctx.font = "bold 22px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("SCRATCH HERE", canvas.width/2, canvas.height/2);
-
-  ctx.globalCompositeOperation = "destination-out";
-
-  let isDown = false;
-  let revealed = false;
-
-  function scratch(x,y) {
-    ctx.beginPath();
-    ctx.arc(x,y,30,0,Math.PI*2);
-    ctx.fill();
-    checkReveal();
+  function goToScratch() {
+    document.getElementById("intro").classList.remove("active");
+    document.getElementById("scratchPage").classList.add("active");
+    setupScratch();
   }
 
-  function checkReveal() {
-    if (revealed) return;
-    const img = ctx.getImageData(0,0,canvas.width,canvas.height);
-    let cleared = 0;
+  function setupScratch() {
+    const canvas = document.getElementById("canvas");
+    const box = document.getElementById("scratchBox");
+    const ctx = canvas.getContext("2d");
 
-    for (let i = 3; i < img.data.length; i += 4)
-      if (img.data[i] === 0) cleared++;
+    canvas.width = box.offsetWidth;
+    canvas.height = box.offsetHeight;
 
-    if ((cleared / (canvas.width * canvas.height)) * 100 > 35) {
-      revealed = true;
-      canvas.style.transition = "opacity 1s";
-      canvas.style.opacity = 0;
-      setTimeout(() => canvas.remove(), 1000);
+    ctx.fillStyle = "#bdc3c7";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#555";
+    ctx.font = "bold 20px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText("SCRATCH HERE", canvas.width/2, canvas.height/2);
+
+    let scratching = false, revealed = false;
+
+    function scratch(x,y){
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.lineWidth = 40;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.lineTo(x,y);
+      ctx.stroke();
     }
+
+    function checkReveal(){
+      if(revealed) return;
+      const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      let cleared = 0;
+      for(let i=3;i<data.length;i+=4) if(data[i]===0) cleared++;
+      if(cleared/(canvas.width*canvas.height) > 0.35){
+        revealed = true;
+        canvas.style.transition="opacity .6s ease";
+        canvas.style.opacity=0;
+        setTimeout(()=>canvas.remove(),600);
+      }
+    }
+
+    canvas.addEventListener("mousedown",()=>scratching=true);
+    canvas.addEventListener("mouseup",()=>scratching=false);
+    canvas.addEventListener("mousemove",e=>{
+      if(!scratching) return;
+      const r=canvas.getBoundingClientRect();
+      scratch(e.clientX-r.left,e.clientY-r.top);
+      checkReveal();
+    });
+
+    canvas.addEventListener("touchstart",()=>scratching=true);
+    canvas.addEventListener("touchend",()=>scratching=false);
+    canvas.addEventListener("touchmove",e=>{
+      e.preventDefault();
+      if(!scratching) return;
+      const r=canvas.getBoundingClientRect();
+      const t=e.touches[0];
+      scratch(t.clientX-r.left,t.clientY-r.top);
+      checkReveal();
+    },{passive:false});
   }
-
-  canvas.onmousedown = () => isDown = true;
-  canvas.onmouseup = () => isDown = false;
-  canvas.onmousemove = e => isDown && scratch(e.offsetX,e.offsetY);
-
-  canvas.addEventListener("touchmove", e => {
-    e.preventDefault();
-    const r = canvas.getBoundingClientRect();
-    scratch(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
-  },{passive:false});
-
-});
 </script>
 
 </body>
